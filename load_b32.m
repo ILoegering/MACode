@@ -29,12 +29,12 @@ function [original_data,header] = load_b32(varargin)
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: isaacloegering@gmail.com
-% May 2018; Last revision: 14-May-2019
+% May 2018; Last revision: 17-May-2019
 %------------- BEGIN CODE --------------
 if (nargin == 1)
     filename = varargin{1};
 elseif (nargin == 2)
-    filename = [varargin{2} varargin{1} '.b32'];
+    filename = [varargin{2} '\' varargin{1} '.b32'];
 else
     [filename, pathname] = uigetfile('*.b32', ...
         'Choose files to work with', pwd, ...

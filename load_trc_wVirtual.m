@@ -45,7 +45,7 @@ if (narg==0);
         time = [];
         return;
     end
-    fid = fopen([inpath infile],'r');
+    fid = fopen([inpath '\' infile],'r');
     file = infile(1:length(infile));
 elseif (narg==1)
     file = [infile(1:length(infile)) '.trc'];
@@ -53,8 +53,8 @@ elseif (narg==1)
     inpath='';
 else
     file = [infile(1:length(infile)) '.trc'];
-%     [inpath infile]
-    fid=fopen([inpath file],'r');
+%     [inpath '\' infile]
+    fid=fopen([inpath '\' file],'r');
 end
 
 if (fid==-1)

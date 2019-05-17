@@ -41,7 +41,7 @@ function [anc,time,samp_rate,channel_names,range,voltdata]=load_anc(infile,inpat
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: dgthelen@wisc.edu
-% October 2005; Last revision: 14-May-2019
+% October 2005; Last revision: 17-May-2019
 %------------- BEGIN CODE --------------
 % Load .anc file
 % If filename unspecified, prompt user with file browser to select file
@@ -51,14 +51,14 @@ if (nargin==0)
         disp('No file selected');
         return;
     end
-    fid = fopen([inpath infile],'r');
+    fid = fopen([inpath '\' infile],'r');
 % If filename specified, ensure it ends in '.anc' and load
 elseif (nargin>0)
     if ~strcmp(infile((end-3):end),'.anc') 
         infile = [infile,'.anc'];
     end
     if (nargin==2)
-        fid = fopen([inpath infile],'r');
+        fid = fopen([inpath '\' infile],'r');
     else 
         inpath='';
         fid=fopen(infile,'r');

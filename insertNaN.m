@@ -47,7 +47,7 @@ for i = 1:numel(idxNaN)
     else
         S.type = '()';
         S.subs = repmat({':'},1,ndims(B));
-        eval(['S.subs{1} = 1:' num2str(idxNaN(i))-1 ';'])
+        eval(['S.subs{1} = 1:' num2str(idxNaN(i)-1) ';'])
         pt1 = subsref(B,S);
         eval(['S.subs{1} = ' num2str(idxNaN(i)) ':' num2str(size(B,1)) ';'])
         pt2 = subsref(B,S);
