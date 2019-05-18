@@ -33,7 +33,7 @@ function [trc,time,f,n,nmrk,mrk_names,file,inpath]=load_trc_wVirtual(infile,inpa
 %   MATLAB Version 7.1
 
 narg = nargin;
-if (narg==0);
+if (narg==0)
     [infile, inpath]=uigetfile('*.trc','Select input file');
     if (infile==0)
         disp('No file selected');

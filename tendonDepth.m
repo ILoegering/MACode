@@ -134,5 +134,6 @@ for frame = framesOfInterest
     tendonCoords.axialLocation{f} = Y;
     tendonCoords.frame(f) = frame;
 end
+close
 %------------- END OF CODE --------------
 end

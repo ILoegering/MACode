@@ -248,7 +248,9 @@ try
 % If error occurs...
 catch
     % ...save tendonCoords to current directory.
-    save(['AAA_temp_' save_name '_tendonCoords.mat'],'tendonCoords')
+    if (exist('tendonCoords'))
+        save(['AAA_temp_' save_name '_tendonCoords.mat'],'tendonCoords')
+    end
     error(['The tendonDepth.m function crashed unexpectedly, but '...
         'don''t worry! Your progress was saved in '...
         'AAA_temp_' save_name '_tendonCoords.mat, which is located in '...
@@ -257,7 +259,9 @@ catch
         'your saved progress.'])
 end
 % Delete temporary tendonCoords file
-delete(['AAA_temp_' save_name '_tendonCoords.mat'])
+if (exist(['AAA_temp_' save_name '_tendonCoords.mat'],'file'))
+    delete(['AAA_temp_' save_name '_tendonCoords.mat'])
+end
 
 % Extract ultrasound window marker data
 w1 = getMrkPos(mot_pos,'w1');
