@@ -6,12 +6,12 @@ clc
 isCortex = 1;  % 0 = Optotrak, 1 = Cortex
 % Equipment: Ultrasound
 tw = 38/1000; % Transducer width in m
-td = 2/100; % Transducer depth in m
-us_fr = 13; % Ultrasound frame rate
+td = 3/100; % Transducer depth in m
+dsampleRate = 10;   % dsampleRate = mocap frame rate/ultrasound frame rate
 % Subject/trial-specific info
-subjectID = 'TMD_TD01';
-kinemID = 'Fl'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
-trial = 'K2'; % For ankle, use 'A#'. For knee, use 'K#'.
+subjectID = 'TMD_TD03';
+kinemID = '20'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
+trial = 'A3'; % For ankle, use 'A#'. For knee, use 'K#'.
 angSpacing = 5; % Angle spacing: spacing between angles over which to measure MA
 testDate = ''; % Only used for pilot Optotrak data (ankle). Empty string if Cortex.
 % Unique identifier used to save analysis files
@@ -44,7 +44,6 @@ elseif (contains(trial,'K'))
 else
     error('Unrecognized trial type')
 end
-mocap_fr = 130; % Motion capture frame rate
 
 % Data file paths and filenames
 root = 'G:\My Drive\UW NMBL\Tendon\Tendon Mechanics Database\TMD_TDchildren\TMD Subject Data\';
@@ -252,7 +251,6 @@ end
 %% Downsample and synchronize data
 if (isCortex)
     % Downsample and synchronize mocap to US data
-    dsampleRate = mocap_fr/us_fr;
     % Calibration data - just downsample since no US data
     staticInd = 1:dsampleRate:1 + (static_info.nframes./dsampleRate - 1)*dsampleRate;
     static_pos = selectFrames(static_pos,staticInd);
