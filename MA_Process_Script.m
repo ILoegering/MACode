@@ -5,11 +5,12 @@ clc
 %% Collection info
 isCortex = 1;  % 0 = Optotrak, 1 = Cortex
 % Equipment: Ultrasound
-tw = 0.038; % Transducer width in m
-td = 0.020; % Transducer depth in m
+tw = 38/1000; % Transducer width in m
+td = 2/100; % Transducer depth in m
+us_fr = 13; % Ultrasound frame rate
 % Subject/trial-specific info
 subjectID = 'TMD_TD01';
-kinemID = 'Ex'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
+kinemID = 'Fl'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
 trial = 'K2'; % For ankle, use 'A#'. For knee, use 'K#'.
 angSpacing = 5; % Angle spacing: spacing between angles over which to measure MA
 testDate = ''; % Only used for pilot Optotrak data (ankle). Empty string if Cortex.
@@ -19,10 +20,11 @@ if (isCortex==0)
     save_name = [save_name '_' trialDate];
 end
 % Check td
-if ((contains(trial,'A') && td == 0.020) || (contains(trial,'K') && td == 0.040))
-    error('Check tendon depth variable td.  Achilles is usually 0.040, and knee is usually 0.020.')
+if (~((contains(trial,'A') && td == 0.030) || (contains(trial,'A') && td == 0.040) || (contains(trial,'K') && td == 0.020)))
+    error('Check tendon depth variable td.  Achilles is usually 0.030 (or 0.040), and knee is usually 0.020.')
 end
 % Equipment: MoCap
+% Select markers for Ankle or Knee
 if (contains(trial,'A'))
     oldMrkNames = {'R.Knee','R.SH1','R.SH2','R.SH3','R.SH4','R.Ankle',...
         'R.Mkn','R.Man','R.Ft1','R.Ft2','R.Ft3','US1','US2','US3','LL',...
@@ -30,6 +32,7 @@ if (contains(trial,'A'))
     newMrkNames = {'lat_con','prox1','prox2','prox3','prox4','lat_mal',...
         'med_con','med_mal','dist1','dist2','dist3','trans1','trans2',...
         'trans3','LL','UL','LR','UR','w1','w2','w3','w4'}; % MoCap marker names used in processing (see organizeMocap4MA.m)
+    calType = 'Ach';
 elseif (contains(trial,'K'))
     oldMrkNames = {'R.TH1','R.TH2','R.TH3','R.TH4','R.Knee','R.Mkn',...
         'R.SH1','R.SH2','R.SH3','R.SH4','R.Ankle','R.Man','US1','US2',...
@@ -37,14 +40,16 @@ elseif (contains(trial,'K'))
     newMrkNames = {'prox1','prox2','prox3','prox4','lat_epi','med_epi',...
         'dist1','dist2','dist3','dist4','lat_mal','med_mal','trans1',...
         'trans2','trans3','LL','UL','LR','UR','w1','w2','w3','w4'}; % MoCap marker names used in processing (see organizeMocap4MA.m)
+    calType = 'Pat';
 else
     error('Unrecognized trial type')
 end
+mocap_fr = 130; % Motion capture frame rate
 
 % Data file paths and filenames
 root = 'G:\My Drive\UW NMBL\Tendon\Tendon Mechanics Database\TMD_TDchildren\TMD Subject Data\';
 static_path = [root subjectID '\Collected Data\Motion Capture Data\Processed_US\'];
-static_filename = [subjectID '_PatCalib_1'];
+static_filename = [subjectID '_' calType 'Calib_1'];
 mot_path = [root subjectID '\Collected Data\Motion Capture Data\Processed_US\'];
 mot_filename = save_name;
 us_path = [root subjectID '\Collected Data\US\'];
@@ -54,8 +59,8 @@ anc_filename = save_name;
 plots_path = [root subjectID '\Data Analysis\MA\Plots\'];
 data_path = [root subjectID '\Data Analysis\MA\Data\'];
 % Save flags
-save_data = 1;
-save_plots = 1;
+save_data = 0;
+save_plots = 0;
 
 %% Load data
 % Load and restructure mocap data
@@ -247,7 +252,7 @@ end
 %% Downsample and synchronize data
 if (isCortex)
     % Downsample and synchronize mocap to US data
-    dsampleRate = 10;
+    dsampleRate = mocap_fr/us_fr;
     % Calibration data - just downsample since no US data
     staticInd = 1:dsampleRate:1 + (static_info.nframes./dsampleRate - 1)*dsampleRate;
     static_pos = selectFrames(static_pos,staticInd);

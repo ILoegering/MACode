@@ -29,7 +29,7 @@ function [original_data,header] = load_b32(varargin)
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: isaacloegering@gmail.com
-% May 2018; Last revision: 17-May-2019
+% May 2018; Last revision: 21-May-2019
 %------------- BEGIN CODE --------------
 if (nargin == 1)
     filename = varargin{1};
@@ -89,7 +89,7 @@ switch header.filetype
 end
 
 % Load the data and display progress to the user
-h = waitbar(0, 'Please wait while the data is being loaded.');
+h = waitbar(0, 'Please wait while the data are being loaded.');
 for frame_count = 1:header.nframes
     
     if(header.filetype == 2) %.bpr

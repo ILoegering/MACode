@@ -30,7 +30,7 @@ function [f] = createCmbdMAvAngPlot(data_path,plot_path,subjectID,kinemID)
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: isaacloegering@gmail.com
-% July 2018; Last revision: 17-May-2019
+% July 2018; Last revision: 21-May-2019
 %------------- BEGIN CODE --------------
 % Get all files in the data folder for this subject
 extension = '.mat';
@@ -45,7 +45,7 @@ for id = 1:length(files)
     % Get filename of data file
     filename = files(id).name;
     % Load data from data file
-    data = load([data_path filename]);
+    data = load([data_path '\' filename]);
     % Plot moment arm vs. joint angle data
     plot(data.angle,data.ma,lineSpec{id})
     clearvars -except f files data_path plot_path subjectID kinemID lineSpec

@@ -44,16 +44,21 @@ function [f] = getMAFit(data_path,fits_path,subjectID,cond,kinemID,trials,db_pat
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: isaacloegering@gmail.com
-% July 2018; Last revision: 17-May-2019
+% July 2018; Last revision: 21-May-2019
 %------------- BEGIN CODE --------------
 %% Load data
 % Angle range
 minAng = Inf;
 maxAng = -Inf;
+% Arrays for combined data
+comb_ang = [];
+comb_ma = [];
 % For each trial...
 for i = 1:numel(trials)
     % Load data
     data(i) = load([data_path '\' subjectID '_' kinemID '_' cond num2str(trials(i)) '.mat']);
+    comb_ang = [comb_ang data(i).angle];
+    comb_ma = [comb_ma data(i).ma];
     % Fit data (regular and robust)
     p(:,i) = polyfit(data(i).angle,data(i).ma,2);
     r{1,i} = fit(data(i).angle',data(i).ma','poly2','Robust','Bisquare');
@@ -67,20 +72,22 @@ for i = 1:numel(trials)
 end
 
 % Calculate average polyfit
-p_net = sum(p,2)/size(trials,2)
+p_net = polyfit(comb_ang',comb_ma',2)'
+% p_net = sum(p,2)/size(trials,2)
 
 % Calculate average robust fit
-sum_r1 = 0;
-sum_r2 = 0;
-sum_r3 = 0;
-for i = 1:size(r,2)
-    sum_r1 = sum_r1 + r{1,i}.p1;
-    sum_r2 = sum_r2 + r{1,i}.p2;
-    sum_r3 = sum_r3 + r{1,i}.p3;
-end
-r_net(1,1) = sum_r1/size(r,2);
-r_net(2,1) = sum_r2/size(r,2);
-r_net(3,1) = sum_r3/size(r,2)
+r_net = fit(comb_ang',comb_ma','poly2','Robust','Bisquare'); r_net = [r_net.p1; r_net.p2; r_net.p3]
+% sum_r1 = 0;
+% sum_r2 = 0;
+% sum_r3 = 0;
+% for i = 1:size(r,2)
+%     sum_r1 = sum_r1 + r{1,i}.p1;
+%     sum_r2 = sum_r2 + r{1,i}.p2;
+%     sum_r3 = sum_r3 + r{1,i}.p3;
+% end
+% r_net(1,1) = sum_r1/size(r,2);
+% r_net(2,1) = sum_r2/size(r,2);
+% r_net(3,1) = sum_r3/size(r,2)
 
 % Save fits to database
 load([db_path '\' db_name '.mat'],db_name)
@@ -132,7 +139,13 @@ switch size(trials,2)
         legend([h(1),h(2),h(3),h(4),h(5),hp_net, hr_net],{[cond num2str(trials(1))],[cond num2str(trials(2))],[cond num2str(trials(3))],[cond num2str(trials(4))],[cond num2str(trials(5))],'polyfit avg','robust fit avg'},'Location','Southeast')
 end
 % Save plots
+if (~exist([fits_path  '\fig\'],'dir'))
+    mkdir(genpath([fits_path  '\fig\']))
+end
+if (~exist([fits_path  '\tiff\'],'dir'))
+    mkdir(genpath([fits_path  '\tiff\']))
+end
 saveas(f,[fits_path  '\fig\' subjectID '_' kinemID '_' cond '.fig'])
-saveas(f,[fits_path  '\fig\' subjectID '_' kinemID '_' cond '.tiff'])
+saveas(f,[fits_path  '\tiff\' subjectID '_' kinemID '_' cond '.tiff'])
 end
 %------------- END OF CODE --------------

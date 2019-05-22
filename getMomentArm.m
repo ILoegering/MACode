@@ -71,7 +71,7 @@ function [angle, ma, tendonCoords] = getMomentArm(static_pos, static_info, mot_p
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: isaacloegering@gmail.com
-% February 2019; Last revision: 14-May-2019
+% February 2019; Last revision: 21-May-2019
 %------------- BEGIN CODE --------------
 %% Compute functional joint axis
 % Find indices of proximal and distal markers
@@ -139,7 +139,7 @@ ylabel('Joint Angle (deg)')
 answer = questdlg(['Which angles are positive and negative is a '...
     'matter of convention. Are angles plotted as expected, or '...
     'should the sign of the angles be reversed?'],['Reverse sign '...
-    'of joint angles?'],'Reverse','Continue','Quit','Continue');
+    'of joint angles?'],'Continue','Reverse','Quit','Continue');
 switch(answer)
     case 'Reverse'
         angDeg = -angDeg;
@@ -252,11 +252,11 @@ catch
         save(['AAA_temp_' save_name '_tendonCoords.mat'],'tendonCoords')
     end
     error(['The tendonDepth.m function crashed unexpectedly, but '...
-        'don''t worry! Your progress was saved in '...
-        'AAA_temp_' save_name '_tendonCoords.mat, which is located in '...
-        'the current directory. Just don''t change your current '...
-        'directory and re-run your code. You should be able to load '...
-        'your saved progress.'])
+        'don''t worry! If you segmented any images, your progress was '...
+        'saved in AAA_temp_' save_name '_tendonCoords.mat, which is '...
+        'located in the current directory. Just don''t change your '...
+        'current directory and re-run your code. You should be able to '...
+        'load your saved progress.'])
 end
 % Delete temporary tendonCoords file
 if (exist(['AAA_temp_' save_name '_tendonCoords.mat'],'file'))
@@ -270,7 +270,7 @@ w3 = getMrkPos(mot_pos,'w3');   % Not used (only three points needed to define p
 w4 = getMrkPos(mot_pos,'w4');
 
 % Calculate x,y,z directions of ultrasound reference frame
-y = (w1 - w2)./vecnorm((w1 - w2)')';    % Along width of transducer
+y = (w1 - w2)./vecnorm((w1 - w2)')';    % Along width of transducer (from bump to groove)
 z = (w4 - w2)./vecnorm((w4 - w2)')';    % Along thickness of transducer
 x = cross(y,z);                         % Along depth (into body)
 z = cross(x,y); % Ensure reference frame is orthogonal

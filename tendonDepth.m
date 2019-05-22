@@ -41,9 +41,10 @@ function[tendonCoords] = tendonDepth(Data,Header,xConv,yConv,tw,framesOfInterest
 % Madison, WI 53706
 % email: jack.martin1313@gmail.com
 %        isaacloegering@gmail.com
-% A long time ago in a biomechanics lab far, far away; Last revision: 14-May-2019
+% A long time ago in a biomechanics lab far, far away; Last revision: 21-May-2019
 %------------- BEGIN CODE --------------
 figure
+set(gcf,'WindowState','Maximize');
 hA = axes;
 f = 0;
 % For each frame of interest
