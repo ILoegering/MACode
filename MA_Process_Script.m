@@ -3,6 +3,10 @@ close all
 clc
 
 %% Collection info
+% Save flags
+save_data = 1;
+save_plots = 1;
+
 isCortex = 1;  % 0 = Optotrak, 1 = Cortex
 % Equipment: Ultrasound
 tw = 38/1000; % Transducer width in m
@@ -11,7 +15,7 @@ dsampleRate = 10;   % dsampleRate = mocap frame rate/ultrasound frame rate
 % Subject/trial-specific info
 subjectID = 'TMD_TD03';
 kinemID = '20'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
-trial = 'A3'; % For ankle, use 'A#'. For knee, use 'K#'.
+trial = 'A1'; % For ankle, use 'A#'. For knee, use 'K#'.
 angSpacing = 5; % Angle spacing: spacing between angles over which to measure MA
 testDate = ''; % Only used for pilot Optotrak data (ankle). Empty string if Cortex.
 % Unique identifier used to save analysis files
@@ -57,9 +61,6 @@ anc_path = [root subjectID '\Collected Data\Motion Capture Data\Processed_US\Gen
 anc_filename = save_name;
 plots_path = [root subjectID '\Data Analysis\MA\Plots\'];
 data_path = [root subjectID '\Data Analysis\MA\Data\'];
-% Save flags
-save_data = 0;
-save_plots = 0;
 
 %% Load data
 % Load and restructure mocap data
@@ -274,7 +275,7 @@ if (isCortex)
         title('Check start index')
         answer = questdlg('Correct start index?','Check start index','Yes','No','Yes');
         close(f)
-        if(strcmp(answer,'No'))
+        if(~strcmp(answer,'Yes'))
             error('Please adjust trigger threshold and try again.')
         end
         motIndStart = roundn(motIndStart,2)/dsampleRate;
