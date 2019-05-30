@@ -41,14 +41,16 @@ f = figure;
 lineSpec = {'k*','b*','r*','g*','m*'};
 hold on
 % Loop through data files
+trialNums = nan(size(files));
 for id = 1:length(files)
     % Get filename of data file
     filename = files(id).name;
+    trialNums(id) = str2num(cell2mat(extractAfter(extractBetween(filename,[kinemID '_'],'.mat'),1)));
     % Load data from data file
     data = load([data_path '\' filename]);
     % Plot moment arm vs. joint angle data
     plot(data.angle,data.ma,lineSpec{id})
-    clearvars -except f files data_path plot_path subjectID kinemID lineSpec
+    clearvars -except f files data_path plot_path subjectID kinemID lineSpec trialNums
 end
 hold off
 title('MA vs. Joint Angle')
@@ -56,7 +58,7 @@ xlabel('Joint Angle (deg)')
 ylabel('Tendon MA (mm)')
 % Create cell array containing names of plots
 for i = 1:numel(files)
-    plotNames{i} = ['Trial ' num2str(i)];
+    plotNames{i} = ['Trial ' num2str(trialNums(i))];
 end
 legend(plotNames)
 % Save figure in tiff and fig formats

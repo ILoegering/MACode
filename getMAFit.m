@@ -140,10 +140,10 @@ switch size(trials,2)
 end
 % Save plots
 if (~exist([fits_path  '\fig\'],'dir'))
-    mkdir(genpath([fits_path  '\fig\']))
+    mkdir([fits_path  '\fig\'])
 end
 if (~exist([fits_path  '\tiff\'],'dir'))
-    mkdir(genpath([fits_path  '\tiff\']))
+    mkdir([fits_path  '\tiff\'])
 end
 saveas(f,[fits_path  '\fig\' subjectID '_' kinemID '_' cond '.fig'])
 saveas(f,[fits_path  '\tiff\' subjectID '_' kinemID '_' cond '.tiff'])
