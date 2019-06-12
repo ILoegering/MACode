@@ -168,6 +168,7 @@ end
 if (last > size(angDeg,1))
     last = size(angDeg,1);
 end
+disp('Trimming data...')
 angDegTrim = angDeg(first:last,:);
 [angFrame, angle] = valueSearch(angDegTrim,angSpacing);
 angFrame = angFrame + first - 1;    % Shift so that indices match original angle array
@@ -193,6 +194,7 @@ if (1)
     if (7~=exist([plots_path 'Selected Frames\fig\'],'dir'))
         mkdir([plots_path 'Selected Frames\fig\']);
     end
+    disp(['Saving selected frames plots to ''' plots_path 'Selected Frames\''...'])
     saveas(fig, [plots_path 'Selected Frames\tiff\' save_name],'tiff')
     saveas(fig, [plots_path 'Selected Frames\fig\' save_name],'fig')
 end
@@ -270,12 +272,14 @@ w3 = getMrkPos(mot_pos,'w3');   % Not used (only three points needed to define p
 w4 = getMrkPos(mot_pos,'w4');
 
 % Calculate x,y,z directions of ultrasound reference frame
+disp('Computing transducer reference frame...')
 y = (w1 - w2)./vecnorm((w1 - w2)')';    % Along width of transducer (from bump to groove)
 z = (w4 - w2)./vecnorm((w4 - w2)')';    % Along thickness of transducer
 x = cross(y,z);                         % Along depth (into body)
 z = cross(x,y); % Ensure reference frame is orthogonal
 
 % Calculate ultrasound transformation matrix, Tu, for each frame
+disp('Computing ultrasound transformation matrix...')
 Tu = cell(mot_info.nframes,1);
 for i=1:mot_info.nframes
     % Calculate 3x3 rotation matrix R
@@ -313,6 +317,7 @@ for i = angFrame
 end
 
 % Transform ultrasound data into global reference frame
+disp('Transforming ultrasound data into global reference frame...')
 numFOI = size(tendonCoords.frame,2);    % Number of frames of interest
 gTendonCoords = struct('frame',[],'coords',[]); % Coordinates of tendon in global reference frame
 for i=1:numFOI
@@ -323,6 +328,7 @@ for i=1:numFOI
 end
 
 %% Calculate moment arm
+disp('Calculating moment arm...')
 Q = zeros(length(gTendonCoords.frame),3);
 tendonDir = zeros(length(gTendonCoords.frame),3);
 ma = Inf(size(gTendonCoords.frame));

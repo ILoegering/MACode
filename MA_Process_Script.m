@@ -10,12 +10,11 @@ save_plots = 1;
 isCortex = 1;  % 0 = Optotrak, 1 = Cortex
 % Equipment: Ultrasound
 tw = 38/1000; % Transducer width in m
-td = 3/100; % Transducer depth in m
-dsampleRate = 10;   % dsampleRate = mocap frame rate/ultrasound frame rate
+td = 2/100; % Transducer depth in m
 % Subject/trial-specific info
-subjectID = 'TMD_TD03';
-kinemID = '20'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
-trial = 'A1'; % For ankle, use 'A#'. For knee, use 'K#'.
+subjectID = 'TMD_TD06';
+kinemID = 'Ex'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
+trial = 'K3'; % For ankle, use 'A#'. For knee, use 'K#'.
 angSpacing = 5; % Angle spacing: spacing between angles over which to measure MA
 testDate = ''; % Only used for pilot Optotrak data (ankle). Empty string if Cortex.
 % Unique identifier used to save analysis files
@@ -23,7 +22,7 @@ save_name = [subjectID '_' kinemID '_' trial];
 if (isCortex==0)
     save_name = [save_name '_' trialDate];
 end
-% Check td
+% Check td and alert if incorrect
 if (~((contains(trial,'A') && td == 0.030) || (contains(trial,'A') && td == 0.040) || (contains(trial,'K') && td == 0.020)))
     error('Check tendon depth variable td.  Achilles is usually 0.030 (or 0.040), and knee is usually 0.020.')
 end
@@ -77,7 +76,8 @@ ymin = find(yCollapse>0,1,'first'); ymax = find(yCollapse>0,1,'last');
 wVox = xmax-xmin+1; % Calculate number of voxels along width dimension
 dVox = ymax-ymin+1; % Calculate number of voxels along depth dimension
 us_data = us_data(xmin:xmax,ymin:ymax,:);   % Trim border from data
-us_data = flipud(us_data);    % Flip y-axis direction (reflect data across x-axis so origin is in lower left corner when YDir is normal)
+% Calculate sample rate ratio of mocap to ultrasound
+dsampleRate = mot.freq/us_header.dr;   % dsampleRate = mocap frame rate/ultrasound frame rate
 
 %% Check data
 % DATA CHECK: Window markers labeled correctly?
@@ -143,6 +143,7 @@ fs = mot_info.freq;  % Sampling frequency
 filtOrder = 6;  % Order of filter
 [b,a] = butter(filtOrder,fc/(fs/2),'low');
 % Filter STATIC data
+disp(['Low pass filtering static data with cut-off frequency ' num2str(fc) ' Hz...'])
 for i=1:numel(static_pos)
     % DATA CHECK: Plot unfiltered data
     if(0)
@@ -196,6 +197,7 @@ for i=1:numel(static_pos)
     end
 end
 % Filter MOTION data
+disp(['Low pass filtering motion data with cut-off frequency ' num2str(fc) ' Hz...'])
 for i=1:numel(mot_pos)
     % DATA CHECK: Plot unfiltered data
     if(0)
@@ -251,13 +253,14 @@ end
 
 %% Downsample and synchronize data
 if (isCortex)
+    disp(['Downsampling motion capture data by a factor of ' num2str(dsampleRate) ' and synchronizing with ultrasound data...'])
     % Downsample and synchronize mocap to US data
     % Calibration data - just downsample since no US data
-    staticInd = 1:dsampleRate:1 + (static_info.nframes./dsampleRate - 1)*dsampleRate;
+    staticInd = round(1:dsampleRate:1 + (static_info.nframes./dsampleRate - 1)*dsampleRate);
     static_pos = selectFrames(static_pos,staticInd);
-    static_info.time = static_info.time(1:dsampleRate:end);
+    static_info.nframes = size(static_pos(1).pos,1);
+    static_info.time = static_info.time(round(1:dsampleRate:static_info.nframes*dsampleRate));
     static_info.freq = static_info.freq/dsampleRate;
-    static_info.nframes = static_info.nframes/dsampleRate;
     % Motion data - downsample and synchronize
     if(~exist([us_path '\motIndStart_' trial '.mat'],'file'))
         anc = load_anc(anc_filename,anc_path);
@@ -293,24 +296,27 @@ if (isCortex)
         load([us_path '\numFramesUS_' trial '.mat'],'numFrameUS')
     end
     motIndEnd = motIndStart + (numFrameUS - 1)*dsampleRate;
-    motInd = motIndStart:dsampleRate:motIndEnd;
+    motInd = round(motIndStart:dsampleRate:motIndEnd);
     % Check if mocap ended before US
     if (mean(motInd < mot_info.nframes-(dsampleRate-1)) < 1)
         disp('The motion capture concluded before the ultrasound.')
     end
     motInd = motInd(motInd < mot_info.nframes-(dsampleRate-1));
     mot_pos = selectFrames(mot_pos,motInd);
-    mot_info.time = mot_info.time(1:dsampleRate:dsampleRate*size(mot_pos(1).pos,1));
-    mot_info.freq = mot_info.freq/dsampleRate;
     mot_info.nframes = size(mot_pos(1).pos,1);
+    mot_info.time = mot_info.time(round(1:dsampleRate:mot_info.nframes*dsampleRate));
+    mot_info.freq = mot_info.freq/dsampleRate;
 end
 
 %% Calculate moment arms
+% Calculate moment arm
 [angle, ma, tendonCoords] = getMomentArm(static_pos, static_info, mot_pos, mot_info, angSpacing, us_data, us_header, tw, wVox, td, dVox, plots_path, save_name);
+% Save data
 if (save_data)
     if (7~=exist(data_path,'dir'))
         mkdir(data_path);
     end
+    disp(['Saving moment arm data to ''' data_path '\' save_name '''...'])
     save([data_path '\' save_name],'angle','ma','tendonCoords')
 end
 % Plot moment arm vs. joint angle
@@ -326,6 +332,8 @@ if (save_plots)
     if (7~=exist([plots_path '\Moment Arm\fig\'],'dir'))
         mkdir([plots_path '\Moment Arm\fig\']);
     end
+    disp(['Saving moment arm plots to ''' plots_path '\Moment Arm\''...'])
     saveas(f, [plots_path '\Moment Arm\tiff\' save_name],'tiff')
     saveas(f, [plots_path '\Moment Arm\fig\' save_name],'fig')
 end
+disp('Done')

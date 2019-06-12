@@ -62,8 +62,6 @@ for frame = framesOfInterest
         % Plot ultrasound .b32 image
         plot_SonixRP(Data(:, :, frame), Header , [hA hA], 1);
         
-        % Set y-axis to display normally (+y-direction up)
-        set(gca,'YDir','normal')
         hold on
         
         % Selecting and plotting the points for the tendon boundaries
