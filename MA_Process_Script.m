@@ -10,11 +10,11 @@ save_plots = 1;
 isCortex = 1;  % 0 = Optotrak, 1 = Cortex
 % Equipment: Ultrasound
 tw = 38/1000; % Transducer width in m
-td = 2/100; % Transducer depth in m
+td = 3/100; % Transducer depth in m
 % Subject/trial-specific info
-subjectID = 'TMD_TD06';
-kinemID = 'Ex'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
-trial = 'K3'; % For ankle, use 'A#'. For knee, use 'K#'.
+subjectID = 'TMD_TD07';
+kinemID = '20'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
+trial = 'A1'; % For ankle, use 'A#'. For knee, use 'K#'.
 angSpacing = 5; % Angle spacing: spacing between angles over which to measure MA
 testDate = ''; % Only used for pilot Optotrak data (ankle). Empty string if Cortex.
 % Unique identifier used to save analysis files
@@ -31,7 +31,7 @@ end
 if (contains(trial,'A'))
     oldMrkNames = {'R.Knee','R.SH1','R.SH2','R.SH3','R.SH4','R.Ankle',...
         'R.Mkn','R.Man','R.Ft1','R.Ft2','R.Ft3','US1','US2','US3','LL',...
-        'UL','LR','UR','VMUL','VMLL','VMLR','VMUR'}; % MoCap marker names given during collection
+        'UL','LR','UR','VMLL','VMUL','VMLR','VMUR'}; % MoCap marker names given during collection
     newMrkNames = {'lat_con','prox1','prox2','prox3','prox4','lat_mal',...
         'med_con','med_mal','dist1','dist2','dist3','trans1','trans2',...
         'trans3','LL','UL','LR','UR','w1','w2','w3','w4'}; % MoCap marker names used in processing (see organizeMocap4MA.m)
@@ -39,7 +39,7 @@ if (contains(trial,'A'))
 elseif (contains(trial,'K'))
     oldMrkNames = {'R.TH1','R.TH2','R.TH3','R.TH4','R.Knee','R.Mkn',...
         'R.SH1','R.SH2','R.SH3','R.SH4','R.Ankle','R.Man','US1','US2',...
-        'US3','LL','UL','LR','UR','VMUL','VMLL','VMLR','VMUR'}; % MoCap marker names given during collection
+        'US3','LL','UL','LR','UR','VMLL','VMUL','VMLR','VMUR'}; % MoCap marker names given during collection
     newMrkNames = {'prox1','prox2','prox3','prox4','lat_epi','med_epi',...
         'dist1','dist2','dist3','dist4','lat_mal','med_mal','trans1',...
         'trans2','trans3','LL','UL','LR','UR','w1','w2','w3','w4'}; % MoCap marker names used in processing (see organizeMocap4MA.m)
@@ -63,11 +63,13 @@ data_path = [root subjectID '\Data Analysis\MA\Data\'];
 
 %% Load data
 % Load and restructure mocap data
+disp('Loading motion capture data...')
 static = load_trc_wVirtual(static_filename, static_path);
 mot = load_trc_wVirtual(mot_filename, mot_path);
 [static_pos, static_info] = organizeMocap4MA(static,oldMrkNames,newMrkNames);
 [mot_pos, mot_info] = organizeMocap4MA(mot,oldMrkNames,newMrkNames);
 % Load ultrasound data and trim border
+disp('Loading ultrasound data...')
 [us_data, us_header] = RPread(strcat(us_path,[us_filename '.b32']), Inf);
 xCollapse = squeeze(sum(us_data,[2,3])); % Find extrema along x direction
 xmin = find(xCollapse>0,1,'first'); xmax = find(xCollapse>0,1,'last');
@@ -166,8 +168,8 @@ for i=1:numel(static_pos)
     end
     % Remove dropout frames
     [cf_static,idxNaN_static] = removeNaN(static_pos(i).pos);
-    % If all frames blank, skip
-    if (isempty(idxNaN_static))
+    % If insufficient data to filter (short trial, blank frames, etc.), skip
+    if (~(size(cf_static,1) > 18))
         try
             close f
         catch
@@ -220,8 +222,8 @@ for i=1:numel(mot_pos)
     end
     % Remove dropout frames
     [cf_mot,idxNaN_mot] = removeNaN(mot_pos(i).pos);
-    % If all frames blank, skip
-    if (isempty(idxNaN_mot))
+    % If insufficient data to filter (short trial, blank frames, etc.), skip
+    if (~(size(cf_mot,1) > 18))
         try
             close f
         catch

@@ -78,10 +78,10 @@ function [angle, ma, tendonCoords] = getMomentArm(static_pos, static_info, mot_p
 proxIdx = find(contains({static_pos.mrk_name},'prox')==1);
 distIdx = find(contains({static_pos.mrk_name},'dist')==1);
 % Restructure for functionalJointAxis
-static_prox = nan(static_info.nframes,size(static_pos(1).pos,2),numel(proxIdx));
-static_dist = nan(static_info.nframes,size(static_pos(1).pos,2),numel(distIdx));
-mot_prox = nan(mot_info.nframes,size(mot_pos(1).pos,2),numel(proxIdx));
-mot_dist = nan(mot_info.nframes,size(mot_pos(1).pos,2),numel(distIdx));
+static_prox = nan(static_info.nframes,3,numel(proxIdx));
+static_dist = nan(static_info.nframes,3,numel(distIdx));
+mot_prox = nan(mot_info.nframes,3,numel(proxIdx));
+mot_dist = nan(mot_info.nframes,3,numel(distIdx));
 for i = 1:numel(proxIdx)
     static_prox(:,:,i) = static_pos(proxIdx(i)).pos;
     mot_prox(:,:,i) = mot_pos(proxIdx(i)).pos;
@@ -265,19 +265,28 @@ if (exist(['AAA_temp_' save_name '_tendonCoords.mat'],'file'))
     delete(['AAA_temp_' save_name '_tendonCoords.mat'])
 end
 
+% Plot ultrasound images with tendon coordinates
+for i = 1:numel(tendonCoords.depth)
+    figure
+    hA = axes;
+    hold on
+    plot_SonixRP(us_data(:, :, angFrame(i)), us_header , [hA hA], 1);
+    plot(tendonCoords.depth{1,i}*(dVox/td),tendonCoords.axialLocation{1,i}*(wVox/tw))
+    hold off
+end
+
 % Extract ultrasound window marker data
-w1 = getMrkPos(mot_pos,'w1');
-w2 = getMrkPos(mot_pos,'w2');
-w3 = getMrkPos(mot_pos,'w3');   % Not used (only three points needed to define plane/create reference frame)
-w4 = getMrkPos(mot_pos,'w4');
+w1 = getMrkPos(mot_pos,'w1');   % LL
+w2 = getMrkPos(mot_pos,'w2');   % UL
+w3 = getMrkPos(mot_pos,'w3');   % LR,  not used (only three points needed to define plane/create reference frame)
+w4 = getMrkPos(mot_pos,'w4');   % UR
 
 % Calculate x,y,z directions of ultrasound reference frame
 disp('Computing transducer reference frame...')
 y = (w1 - w2)./vecnorm((w1 - w2)')';    % Along width of transducer (from bump to groove)
 z = (w4 - w2)./vecnorm((w4 - w2)')';    % Along thickness of transducer
-x = cross(y,z);                         % Along depth (into body)
+x = cross(y,z)./vecnorm(cross(y,z)')';  % Along depth (into body)
 z = cross(x,y); % Ensure reference frame is orthogonal
-
 % Calculate ultrasound transformation matrix, Tu, for each frame
 disp('Computing ultrasound transformation matrix...')
 Tu = cell(mot_info.nframes,1);
@@ -285,9 +294,9 @@ for i=1:mot_info.nframes
     % Calculate 3x3 rotation matrix R
     R = [x(i,:)' y(i,:)' z(i,:)'];
     % Get translation vector v to origin of ultrasound reference frame
-    w2w1 = w1(i,:) - w2(i,:);
-    dw2w1 = norm(w2w1);
-    correction = dw2w1/2 - tw/2; % All units in meters
+    w2w1 = w1(i,:) - w2(i,:);   % Vector from w2 to w1
+    dw2w1 = norm(w2w1);         % The distance between w2 and w1 should be tw, but there is usually some error.
+    correction = dw2w1/2 - tw/2;% Correction accounts for error in defining window markers; all units in meters
     v = (w2(i,:) + w4(i,:))./2 + correction*(w2w1/dw2w1);
     % Input R and v into Tu
     Tu{i,1} = [R v'; 0 0 0 1];
@@ -356,6 +365,7 @@ ma = ma*1000;
 if (1)
     figure
     hold on
+    pntrange = angFrame;
     % Proximal
     for i = 1:numel(proxIdx)
         prox = getMrkPos(mot_pos,mot_pos(proxIdx(i)).mrk_name);
@@ -380,9 +390,23 @@ if (1)
     for i=1:size(Q,1)
         h6 = plot3([t1(i,1) t2(i,1)],[t1(i,2) t2(i,2)],[t1(i,3) t2(i,3)],'b-');
     end
+    % Plot window markers
+    wIdx=find(~cellfun(@isempty,regexp({mot_pos.mrk_name},'w[1-4]'))==1);
+    for i = 1:numel(wIdx)
+        w = getMrkPos(mot_pos,mot_pos(wIdx(i)).mrk_name);
+        h7 = plotMrk(w,'k+',pntrange);
+    end
+    % Plot image 
+    for i = 1:numel(pntrange)
+        I0(i) = {Tu{pntrange(i)}(1:3,4)};
+        I2(i) = {I0{i} + tw*y(pntrange(i),:)'};
+        I1(i) = {I0{i} + td*x(pntrange(i),:)'};
+        I3(i) = {I0{i} + tw*y(pntrange(i),:)' + td*x(pntrange(i),:)'};
+        h8 = plot3([I0{i}(1),I1{i}(1),I3{i}(1),I2{i}(1),I0{i}(1)],[I0{i}(2),I1{i}(2),I3{i}(2),I2{i}(2),I0{i}(2)],[I0{i}(3),I1{i}(3),I3{i}(3),I2{i}(3),I0{i}(3)],'k-');
+    end
     hold off
     axis equal;
-    legend([h1 h2 h3 h4 h5 h6],{'prox','dist','JC','FJA','TC','TLOA'})
+    legend([h1 h2 h3 h4 h5 h6 h7 h8],{'prox','dist','JC','FJA','TC','TLOA','Window','Image Frame'})
 end
 %------------- END OF CODE --------------
 end

@@ -73,21 +73,9 @@ end
 
 % Calculate average polyfit
 p_net = polyfit(comb_ang',comb_ma',2)'
-% p_net = sum(p,2)/size(trials,2)
 
 % Calculate average robust fit
 r_net = fit(comb_ang',comb_ma','poly2','Robust','Bisquare'); r_net = [r_net.p1; r_net.p2; r_net.p3]
-% sum_r1 = 0;
-% sum_r2 = 0;
-% sum_r3 = 0;
-% for i = 1:size(r,2)
-%     sum_r1 = sum_r1 + r{1,i}.p1;
-%     sum_r2 = sum_r2 + r{1,i}.p2;
-%     sum_r3 = sum_r3 + r{1,i}.p3;
-% end
-% r_net(1,1) = sum_r1/size(r,2);
-% r_net(2,1) = sum_r2/size(r,2);
-% r_net(3,1) = sum_r3/size(r,2)
 
 % Save fits to database
 load([db_path '\' db_name '.mat'],db_name)
