@@ -79,17 +79,14 @@ r_net = fit(comb_ang',comb_ma','poly2','Robust','Bisquare'); r_net = [r_net.p1; 
 
 % Save fits to database
 load([db_path '\' db_name '.mat'],db_name)
-eval(['if (~sum(strcmp({' db_name '.id}, subjectID))) '...
+eval(['if (~sum(strcmp({' db_name '.id}, subjectID))) '... % If subject not in database, add them
     db_name '(numel(' db_name ')+1).id = subjectID; '...
     'end'])
 fieldMAType = [cond '_' kinemID '_MA'];  % Used for naming field in database
-try
-    eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_poly=p_net'';']);
-    eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_robust=r_net'';']);
-    eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_valAt0=p_net(3)'';'])
-catch
-    disp('This subject is not currently in the database.')
-end
+eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_poly=p_net'';'])
+eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_robust=r_net'';'])
+eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_valAt0=p_net(3)'';'])
+eval([db_name '=nanFill(' db_name ');'])
 save([db_path '\' db_name '.mat'],db_name)
 
 % Plot data

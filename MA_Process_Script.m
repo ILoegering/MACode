@@ -7,21 +7,17 @@ clc
 save_data = 1;
 save_plots = 1;
 
-isCortex = 1;  % 0 = Optotrak, 1 = Cortex
+isCortex = 1;
 % Equipment: Ultrasound
 tw = 38/1000; % Transducer width in m
 td = 3/100; % Transducer depth in m
 % Subject/trial-specific info
-subjectID = 'TMD_TD07';
-kinemID = '20'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
-trial = 'A1'; % For ankle, use 'A#'. For knee, use 'K#'.
+subjectID = 'TMD_TD11';
+kinemID = 'Fl'; % For ankle, use '20' to indicate 20 deg knee angle. For knee, use 'Ex' or 'Fl' for extension or flexion.
+trial = 'K1'; % For ankle, use 'A#'. For knee, use 'K#'.
 angSpacing = 5; % Angle spacing: spacing between angles over which to measure MA
-testDate = ''; % Only used for pilot Optotrak data (ankle). Empty string if Cortex.
 % Unique identifier used to save analysis files
 save_name = [subjectID '_' kinemID '_' trial];
-if (isCortex==0)
-    save_name = [save_name '_' trialDate];
-end
 % Check td and alert if incorrect
 if (~((contains(trial,'A') && td == 0.030) || (contains(trial,'A') && td == 0.040) || (contains(trial,'K') && td == 0.020)))
     error('Check tendon depth variable td.  Achilles is usually 0.030 (or 0.040), and knee is usually 0.020.')
@@ -64,8 +60,15 @@ data_path = [root subjectID '\Data Analysis\MA\Data\'];
 %% Load data
 % Load and restructure mocap data
 disp('Loading motion capture data...')
-static = load_trc_wVirtual(static_filename, static_path);
-mot = load_trc_wVirtual(mot_filename, mot_path);
+% If Cortex, use load_trc_wVirtual.m
+if (isCortex)
+    static = load_trc_wVirtual(static_filename, static_path);
+    mot = load_trc_wVirtual(mot_filename, mot_path);
+% If Optotrak, use load_opto.m
+else
+    static = load_opto(static_filename, static_path);
+    mot = load_opto(mot_filename, mot_path);
+end
 [static_pos, static_info] = organizeMocap4MA(static,oldMrkNames,newMrkNames);
 [mot_pos, mot_info] = organizeMocap4MA(mot,oldMrkNames,newMrkNames);
 % Load ultrasound data and trim border
@@ -253,8 +256,8 @@ for i=1:numel(mot_pos)
     end
 end
 
-%% Downsample and synchronize data
-if (isCortex)
+%% Downsample and synchronize data (Cortex only)
+if(isCortex)
     disp(['Downsampling motion capture data by a factor of ' num2str(dsampleRate) ' and synchronizing with ultrasound data...'])
     % Downsample and synchronize mocap to US data
     % Calibration data - just downsample since no US data

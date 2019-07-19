@@ -96,36 +96,6 @@ end
 % Free memory
 clearvars static_pos static_info
 
-% DATA CHECK: Plot MoCap data with jc and fja
-if (1)
-    % Motion data
-    figure
-    title('Motion')
-    hold on
-    pntrange = 1:mot_info.nframes;
-    % Proximal
-    for i = 1:numel(proxIdx)
-        prox = getMrkPos(mot_pos,mot_pos(proxIdx(i)).mrk_name);
-        h1 = plotMrk(prox,'b.',pntrange);
-    end
-    % Distal
-    for i = 1:numel(distIdx)
-        dist = getMrkPos(mot_pos,mot_pos(distIdx(i)).mrk_name);
-        h2 = plotMrk(dist,'r.',pntrange);
-    end
-    % JC
-    h3 = plot3(jc(pntrange,1),jc(pntrange,2),jc(pntrange,3),'go');
-    % FJA
-    f1=jc(pntrange,:)-0.2*fja(pntrange,:);
-    f2=jc(pntrange,:)+0.2*fja(pntrange,:);
-    for i=1:size(f1,1)
-        h4 = plot3([f1(i,1) f2(i,1)],[f1(i,2) f2(i,2)],[f1(i,3) f2(i,3)],'k-');
-    end
-    hold off
-    legend([h1 h2 h3 h4],{'prox','dist','JC','FJA'})
-    axis equal
-end
-
 %% Select range of data to analyze
 % Get angles in degrees
 angDeg = ang(:,1)*(180/pi);
@@ -270,7 +240,7 @@ for i = 1:numel(tendonCoords.depth)
     figure
     hA = axes;
     hold on
-    plot_SonixRP(us_data(:, :, angFrame(i)), us_header , [hA hA], 1);
+    plot_SonixRP(us_data(:, :, tendonCoords.frame(i)), us_header , [hA hA], 1);
     plot(tendonCoords.depth{1,i}*(dVox/td),tendonCoords.axialLocation{1,i}*(wVox/tw))
     hold off
 end
@@ -303,7 +273,7 @@ for i=1:mot_info.nframes
 end
 % If Tu is invalid (contains NaN) for frames of interest, find closest
 % Tu that is valid
-for i = angFrame
+for i = tendonCoords.frame
     flag = 1;
     if (sum(isnan(Tu{i,1}),'all'))
         j = 1;
@@ -365,7 +335,7 @@ ma = ma*1000;
 if (1)
     figure
     hold on
-    pntrange = angFrame;
+    pntrange = tendonCoords.frame;
     % Proximal
     for i = 1:numel(proxIdx)
         prox = getMrkPos(mot_pos,mot_pos(proxIdx(i)).mrk_name);
