@@ -1,4 +1,4 @@
-function [angle, ma, tendonCoords] = getMomentArm(static_pos, static_info, mot_pos, mot_info, angSpacing, us_data, us_header, tw, wVox, td, dVox, plots_path, save_name)
+function [angles, ma, tendonCoords] = getMomentArm(static_pos, static_info, mot_pos, mot_info, angSpacing, us_data, us_header, tw, wVox, td, dVox, plots_path, save_name)
 %getMomentArm - calculate moment arm using combined ultrasound-mocap method
 %Calculates moment arm as the shortest distance between the tendon line of
 %action and a function joint axis. The superficial and deep edges of the
@@ -140,17 +140,22 @@ if (last > size(angDeg,1))
 end
 disp('Trimming data...')
 angDegTrim = angDeg(first:last,:);
-[angFrame, angle] = valueSearch(angDegTrim,angSpacing);
-angFrame = angFrame + first - 1;    % Shift so that indices match original angle array
+
+% Create list of angles for which to calculate moment arm
+minAng = min(angDegTrim);
+maxAng = max(angDegTrim);
+angles = ceil(minAng/angSpacing)*angSpacing:angSpacing:floor(maxAng/angSpacing)*angSpacing;
+[angFrames] = valueSearch(angDegTrim,angles);
+angFrames = angFrames + first - 1;    % Shift so that indices match original angle array
 
 % Check frames selected for angles of interest
 hold on
 plot(first:last,angDegTrim,'b-','LineWidth',2);
-for i = 1:numel(angle)
-    plot(angFrame(i),angDeg(angFrame(i)),'ko')
-    plot(1:15:angFrame(i),angle(i),'k.')
-    vertLine = angle(1)-5:2.5:angDeg(angFrame(i));
-    plot(repmat(angFrame(i),1,numel(vertLine)),vertLine,'k.')
+for i = 1:numel(angles)
+    plot(angFrames(i),angDeg(angFrames(i)),'ko')
+    plot(1:15:angFrames(i),angles(i),'k.')
+    vertLine = angles(1)-5:2.5:angDeg(angFrames(i));
+    plot(repmat(angFrames(i),1,numel(vertLine)),vertLine,'k.')
 end
 hold off
 title('Selected frames')
@@ -178,7 +183,7 @@ if (exist(['AAA_temp_' save_name '_tendonCoords.mat']))
     load(['AAA_temp_' save_name '_tendonCoords.mat'])
     % ...and check to see if they correspond to frames currently being
     % processed. If so...
-    if (~ismember(ismember(tendonCoords.frame,angFrame),0))
+    if (~ismember(ismember(tendonCoords.frame,angFrames),0))
         % ...ask the user if they want to load saved tendon coords.
         answer = questdlg(['It looks like you have tendon coords from '...
             'a previous session that can be loaded to save time. Would '...
@@ -190,7 +195,7 @@ if (exist(['AAA_temp_' save_name '_tendonCoords.mat']))
             offset = numel(tendonCoords.frame);
             % ...remove already processed frames from angFrame so they
             % aren't processed again, and leave tendonCoords in Workspace.
-            angFrame = angFrame(~ismember(angFrame,tendonCoords.frame));
+            angFrames = angFrames(~ismember(angFrames,tendonCoords.frame));
         % Otherwise,...
         else
             % ...clear tendonCoords from Workspace and process all frames.
@@ -206,16 +211,16 @@ if (exist(['AAA_temp_' save_name '_tendonCoords.mat']))
 end
 % Get tendon coords for each frame in angFrame
 try
-    for i = 1:numel(angFrame)
+    for i = 1:numel(angFrames)
         % Get tendon coords for single frame
-        output = tendonDepth(us_data, us_header, td/dVox, tw/wVox, tw, angFrame(i));
+        output = tendonDepth(us_data, us_header, td/dVox, tw/wVox, tw, angFrames(i));
         % Store tendon coords in tendonCoords structure
         tendonCoords.depth{1,i + offset} = output.depth{1};
         tendonCoords.axialLocation{1,i + offset} = output.axialLocation{1};
         tendonCoords.frame(1,i + offset) = output.frame;
         % Progress indicator
         disp([num2str(numel(tendonCoords.frame)) ' of '...
-            num2str(numel(angFrame) + offset) ' processed'])
+            num2str(numel(angFrames) + offset) ' processed'])
     end
 % If error occurs...
 catch
@@ -382,26 +387,22 @@ end
 end
 
 %% HELPER FUNCTIONS
-function [sValuesIdx, sValues] = valueSearch(values, varargin)
-%valueSearch - constructs search list and finds nearest entry in 'values'
-%Constructs a search list 'sValues' of all multiples of 'interval' (or 5)
-%contained within 'values'. For each value in 'sValues', the entry in
-%'values' with the closest value is found and its corresponding index is
-%returned in 'sValuesIdx'.
+function [valuesIdx] = valueSearch(data, targets)
+%valueSearch - finds entries in 'data' with values nearest the 'targets'
+%For each value in 'targets', the entry in 'data' with the closest value is
+%found and its corresponding index is returned in 'valuesIdx'.
 %
-% Syntax:  [sValuesIdx, sValues] = valueSearch(values, varargin)
+% Syntax:  [valuesIdx] = valueSearch(data, targets, mode, order)
 %
 % Inputs:
-%    values (required) - double array (numValues x 1)
-%           values to search
-%    interval (optional) - double
-%           spacing interval for search list
+%    data (required) - double array (numDataPoints x 1)
+%           data to search
+%    targets (required) - double array (numValues x 1)
+%           values to find
 %
 % Outputs:
-%    sValuesIdx - double array (size of search list)
-%           indices of nearest values found
-%    sValues - double array (size of search list)
-%           nearest values found
+%    valuesIdx - double array (size of search list)
+%           indices of entries found
 %
 %
 % Other m-files required: none
@@ -414,22 +415,14 @@ function [sValuesIdx, sValues] = valueSearch(values, varargin)
 % 1513 University Ave, Rm 3046
 % Madison, WI 53706
 % email: isaacloegering@gmail.com
-% February 2019; Last revision: 22-Feb-2019
+% February 2019; Last revision: 31-July-2019
 %------------- BEGIN CODE --------------
-if (nargin > 1)
-    interval = varargin{1};
-else
-    interval = 5;
-end
-minAng = min(values);
-maxAng = max(values);
-sValues = ceil(minAng/5)*5:interval:floor(maxAng/interval)*interval;
-sValuesIdx = zeros(size(sValues));
-
-for i=1:size(sValues,2)
-    test = abs(values - sValues(i));
+valuesIdx = nan(size(targets));
+for i = 1:size(targets,2)
+    % Subtract each target value from data array and find best match
+    test = abs(data - targets(i));
     best = min(test);
-    sValuesIdx(1,i) = find(test==best);
+    valuesIdx(1,i) = find(test==best);
 end
 %------------- END OF CODE --------------
 end
