@@ -85,7 +85,12 @@ eval(['if (~sum(strcmp({' db_name '.id}, subjectID))) '... % If subject not in d
 fieldMAType = [cond '_' kinemID '_MA'];  % Used for naming field in database
 eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_poly=p_net'';'])
 eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_robust=r_net'';'])
-eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_valAt0=p_net(3)'';'])
+if (strcmp(cond,'A'))
+    eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_valAtNeutral=p_net(3);'])
+else
+    eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_valAt90Fl=p_net(3);'])
+    eval([db_name '(strcmp({' db_name '.id},subjectID)).' fieldMAType '_valAtFullExtension=polyval(p_net,90);'])
+end
 eval([db_name '=nanFill(' db_name ');'])
 save([db_path '\' db_name '.mat'],db_name)
 
