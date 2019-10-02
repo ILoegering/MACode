@@ -15,13 +15,13 @@ function [jc,fja,ang,JC,FJA] = functionalJointAxis(Pa,Da,Pb,Db)
 %
 % Inputs:
 %    Pa (required) - double matrix (numFrames x 3 x numProxMarkers)
-%           Description
+%           Calibration (static) data from proximal marker shell
 %    Da (required) - double matrix (numFrames x 3 x numDistMarkers)
-%           Description
+%           Calibration (static) data from distal marker shell
 %    Pb (required) - double matrix (numFrames x 3 x numProxMarkers)
-%           Description
+%           Motion (dynamic) data from proximal marker shell
 %    Db (required) - double matrix (numFrames x 3 x numDistMarkers)
-%           Description
+%           Motion (dynamic) data from distal marker shell
 %
 % Outputs:
 %    jc - varType (size)
@@ -39,7 +39,7 @@ function [jc,fja,ang,JC,FJA] = functionalJointAxis(Pa,Da,Pb,Db)
 %   ...all marker kinematics assumed expressed in global coordinates
 %
 %
-% Other m-files required: none
+% Other m-files required: body312ang.m, removeNaN.m, soderk.m
 % Subfunctions: nulltol
 % MAT-files required: none
 %
