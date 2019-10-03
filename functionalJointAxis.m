@@ -39,7 +39,7 @@ function [jc,fja,ang,JC,FJA] = functionalJointAxis(Pa,Da,Pb,Db)
 %   ...all marker kinematics assumed expressed in global coordinates
 %
 %
-% Other m-files required: body312ang.m, removeNaN.m, soderk.m
+% Other m-files required: body312ang.m, insertNaN.m, removeNaN.m, soderk.m
 % Subfunctions: nulltol
 % MAT-files required: none
 %
